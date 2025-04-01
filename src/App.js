@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import supabase from "./supabase";
+import { db } from "./firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 function App() {
   const [questions, setQuestions] = useState([]);
@@ -9,35 +10,38 @@ function App() {
 
   useEffect(() => {
     const fetchQuestions = async () => {
-      const { data, error } = await supabase.from("questions").select("*");
-      if (error) console.error("Fehler beim Laden:", error);
-      else {
+      try {
+        const querySnapshot = await getDocs(collection(db, "questions"));
+        const data = querySnapshot.docs.map((doc) => doc.data());
         setQuestions(data);
-        setCurrentQuestion(getRandomQuestion(data)); // Erste zufällige Frage setzen
+        setCurrentQuestion(getRandomQuestion(data));
+      } catch (error) {
+        console.error("Fehler beim Laden:", error);
       }
     };
+
     fetchQuestions();
   }, []);
 
-  // Zufällige Frage auswählen
-  const getRandomQuestion = (questionsList) => {
-    return questionsList[Math.floor(Math.random() * questionsList.length)];
+  const getRandomQuestion = (list) => {
+    return list[Math.floor(Math.random() * list.length)];
   };
 
   const handleAnswerClick = (index) => {
-    if (selectedAnswer !== null) return; // Verhindert mehrfaches Klicken
-    const correct = index === currentQuestion.correct;
+    if (selectedAnswer !== null || !currentQuestion) return;
+
+    const correct = index === parseInt(currentQuestion.correct);
     setSelectedAnswer(index);
     setIsCorrect(correct);
 
     setTimeout(() => {
       setSelectedAnswer(null);
       setIsCorrect(null);
-      setCurrentQuestion(getRandomQuestion(questions)); // Nächste zufällige Frage
-    }, 2000); // 2 Sekunden warten
+      setCurrentQuestion(getRandomQuestion(questions));
+    }, 2000);
   };
 
-  if (!currentQuestion) return <p>Laden...</p>;
+  if (!currentQuestion) return <p>Lade Fragen...</p>;
 
   return (
     <div style={{
@@ -47,7 +51,7 @@ function App() {
       justifyContent: "center",
       height: "100vh",
       backgroundColor: "#f0f0f0",
-      padding: "20px",
+      padding: "20px"
     }}>
       <div style={{
         backgroundColor: "white",
@@ -56,24 +60,34 @@ function App() {
         boxShadow: "0px 4px 8px rgba(0,0,0,0.2)",
         maxWidth: "600px",
         width: "100%",
-        textAlign: "center",
+        textAlign: "center"
       }}>
         <h1 style={{ textDecoration: "underline", marginBottom: "20px" }}>Rosenheim Cops Quiz</h1>
         <hr style={{ border: "1px solid #ddd", marginBottom: "20px" }} />
 
-        <p style={{ fontSize: "18px", fontWeight: "bold", textAlign: "center", marginBottom: "15px" }}>
+        <p style={{
+          fontSize: "18px",
+          fontWeight: "bold",
+          textAlign: "center",
+          marginBottom: "15px"
+        }}>
           {currentQuestion.question}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {currentQuestion.options.map((option, index) => (
+          {currentQuestion.answers.map((option, index) => (
             <button
               key={index}
               onClick={() => handleAnswerClick(index)}
               style={{
                 padding: "12px",
                 fontSize: "16px",
-                backgroundColor: selectedAnswer === index ? (isCorrect ? "green" : "red") : "#f9f9f9",
+                backgroundColor:
+                  selectedAnswer === index
+                    ? isCorrect
+                      ? "green"
+                      : "red"
+                    : "#f9f9f9",
                 color: selectedAnswer === index ? "white" : "black",
                 border: "1px solid #ccc",
                 borderRadius: "5px",
@@ -99,6 +113,10 @@ function App() {
             {isCorrect ? "✅ Richtig!" : "❌ Falsch!"}
           </p>
         )}
+
+        <p style={{ marginTop: "30px", fontSize: "12px", color: "#aaa" }}>
+          Version: v1.0.1 FB
+        </p>
       </div>
     </div>
   );
