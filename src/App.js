@@ -5,6 +5,7 @@ import { collection, getDocs } from "firebase/firestore";
 function App() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
 
@@ -13,8 +14,10 @@ function App() {
       try {
         const querySnapshot = await getDocs(collection(db, "questions"));
         const data = querySnapshot.docs.map((doc) => doc.data());
-        setQuestions(data);
-        setCurrentQuestion(getRandomQuestion(data));
+        const shuffled = shuffleArray(data);
+        setQuestions(shuffled);
+        setCurrentIndex(0);
+        setCurrentQuestion(shuffled[0]);
       } catch (error) {
         console.error("Fehler beim Laden:", error);
       }
@@ -23,21 +26,35 @@ function App() {
     fetchQuestions();
   }, []);
 
-  const getRandomQuestion = (list) => {
-    return list[Math.floor(Math.random() * list.length)];
-  };
+  function shuffleArray(array) {
+    return array
+      .map((value) => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
+  }
 
   const handleAnswerClick = (index) => {
-    if (selectedAnswer !== null || !currentQuestion) return;
+    if (selectedAnswer !== null) return;
 
     const correct = index === parseInt(currentQuestion.correct);
     setSelectedAnswer(index);
     setIsCorrect(correct);
 
     setTimeout(() => {
+      const nextIndex = currentIndex + 1;
+
+      if (nextIndex < questions.length) {
+        setCurrentIndex(nextIndex);
+        setCurrentQuestion(questions[nextIndex]);
+      } else {
+        const reshuffled = shuffleArray(questions);
+        setQuestions(reshuffled);
+        setCurrentIndex(0);
+        setCurrentQuestion(reshuffled[0]);
+      }
+
       setSelectedAnswer(null);
       setIsCorrect(null);
-      setCurrentQuestion(getRandomQuestion(questions));
     }, 2000);
   };
 
@@ -51,7 +68,7 @@ function App() {
       justifyContent: "center",
       height: "100vh",
       backgroundColor: "#f0f0f0",
-      padding: "20px"
+      padding: "20px",
     }}>
       <div style={{
         backgroundColor: "white",
@@ -60,7 +77,7 @@ function App() {
         boxShadow: "0px 4px 8px rgba(0,0,0,0.2)",
         maxWidth: "600px",
         width: "100%",
-        textAlign: "center"
+        textAlign: "center",
       }}>
         <h1 style={{ textDecoration: "underline", marginBottom: "20px" }}>Rosenheim Cops Quiz</h1>
         <hr style={{ border: "1px solid #ddd", marginBottom: "20px" }} />
@@ -82,12 +99,7 @@ function App() {
               style={{
                 padding: "12px",
                 fontSize: "16px",
-                backgroundColor:
-                  selectedAnswer === index
-                    ? isCorrect
-                      ? "green"
-                      : "red"
-                    : "#f9f9f9",
+                backgroundColor: selectedAnswer === index ? (isCorrect ? "green" : "red") : "#f9f9f9",
                 color: selectedAnswer === index ? "white" : "black",
                 border: "1px solid #ccc",
                 borderRadius: "5px",
@@ -115,7 +127,7 @@ function App() {
         )}
 
         <p style={{ marginTop: "30px", fontSize: "12px", color: "#aaa" }}>
-          Version: v1.0.1 FB
+          Version: v1.0.2 FB
         </p>
       </div>
     </div>
