@@ -127,7 +127,7 @@ function App() {
         )}
 
         <p style={{ marginTop: "30px", fontSize: "12px", color: "#aaa" }}>
-          Version: v1.0.2 FB
+          Version: v1.0.3 FB
         </p>
       </div>
     </div>
