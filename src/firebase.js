@@ -1,25 +1,16 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore"; // <--- FEHLTE!
-import { getAnalytics } from "firebase/analytics"; // <-- nur wenn du es nutzt
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics"; // nur verwenden, wenn benötigt
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyB6WdqSe3quLpw0nRmQXSCKdRpUlecWcLs",
-  authDomain: "rosenheim-quiz.firebaseapp.com",
-  projectId: "rosenheim-quiz",
-  storageBucket: "rosenheim-quiz.firebasestorage.app",
-  messagingSenderId: "986220034443",
-  appId: "1:986220034443:web:39c0153a96313d8ad6d78e",
-  measurementId: "G-TXBWYWQ0FH"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
-
-// Firebase initialisieren
 const app = initializeApp(firebaseConfig);
-
-// Firestore-Datenbank exportieren
 export const db = getFirestore(app);
